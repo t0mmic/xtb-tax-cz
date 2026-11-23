@@ -1,3 +1,11 @@
+node_modules/
+data/*
+test/
+npm-debug.log*
+!data/cnb-rates.json
+!data/Fiscal Report.xlsx
+!data/isin-chache.json
+
 # Logs
 logs
 *.log
