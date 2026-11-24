@@ -1,5 +1,7 @@
 # xtb-tax-cz
 
+Nasazení: https://xtb-tax-czech.vercel.app/
+
 # XTB Fiscal Report Builder - pro průběžný přehled zisku/ztrát během roku 
 přepočtený kurzem ČNB. 
 Netestováno se všemi typy investičních instrumentů (Nemám vše k dispozici 
