@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fiscal Report Builder</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div class="eyebrow">Lokální nástroj · XLSX</div>
+        <h1>Fiscal Report</h1>
+        <p>Vyberte rok, kurz a exporty XTB. Report se zpracuje lokálně na tomto serveru.</p>
+      </header>
+
+      <section class="panel">
+        <h2>1. Nastavení reportu</h2>
+        <div class="form-grid">
+          <label>Rok
+            <select id="year" required></select>
+          </label>
+          <label>Přepočet měn
+            <select id="rate-type">
+              <option value="CNB">Denní kurz ČNB</option>
+              <option value="MF">Roční kurz MF</option>
+            </select>
+          </label>
+          <label>Jméno klienta (volitelné)
+            <input id="client-name" type="text" maxlength="100" autocomplete="name">
+          </label>
+        </div>
+        <p class="hint">ČNB použije kurz platný v den transakce, o víkendu poslední předchozí pracovní den. Účty v CZK se nepřepočítávají.</p>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>2. Vstupní soubory</h2>
+          <button id="refresh" class="button secondary" type="button">Obnovit seznam</button>
+        </div>
+        <label class="upload-label" for="upload-files">Nahrát XTB exporty
+          <input id="upload-files" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple>
+        </label>
+        <p class="hint">Nahrané soubory se zpracují v paměti a neukládají se na NAS. Limit je 8 souborů, nejvýše 20 MB na soubor a 64 MB celkem.</p>
+        <div id="uploads" class="file-list" aria-live="polite"></div>
+        <h3>Uložené soubory v projektu (volitelné)</h3>
+        <div id="files" class="file-list" aria-live="polite"></div>
+        <button id="generate" class="button primary" type="button">Vytvořit a stáhnout report</button>
+        <p id="status" class="status" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <h2>3. EODHD – dohledání ISIN</h2>
+        <p class="hint">Klíč se uloží pouze do paměti serveru do jeho restartu. Pro dosud neuložené tickery se EODHD odešle ticker a klíč; výsledné ISINy se uloží do lokální cache.</p>
+        <form id="isin-form">
+          <label>EODHD API klíč
+            <input id="eodhd-key" type="password" autocomplete="new-password" maxlength="512">
+          </label>
+          <div class="button-row">
+            <button class="button secondary" type="submit">Uložit do paměti</button>
+            <button id="clear-eodhd-key" class="button secondary" type="button">Odebrat klíč</button>
+          </div>
+          <p id="isin-status" class="status" role="status"></p>
+        </form>
+      </section>
+
+      <details class="panel rates-panel">
+        <summary><span>Kurzy: doplnění ČNB a ročního kurzu MF</span></summary>
+        <p class="hint">Kurzy se ukládají do <code>data/cnb-rates.json</code>. MF kurz musí být zadán ručně; aplikace jej neodhaduje z denních kurzů.</p>
+        <form id="rate-form">
+          <div class="form-grid">
+            <label>Typ kurzu
+              <select id="rate-form-type">
+                <option value="MF">Roční kurz MF</option>
+                <option value="CNB">Denní kurz ČNB</option>
+              </select>
+            </label>
+            <label>Rok
+              <input id="rate-year" type="number" min="1900" max="2200" required>
+            </label>
+            <label>Měna
+              <input id="currency" type="text" maxlength="8" placeholder="USD" required>
+            </label>
+            <label id="date-field" class="hidden">Datum kurzu ČNB
+              <input id="rate-date" type="date">
+            </label>
+            <label>Kurz vůči CZK
+              <input id="rate-value" type="number" min="0.0001" step="0.0001" required>
+            </label>
+          </div>
+          <button class="button secondary" type="submit">Uložit kurz</button>
+          <p id="rate-status" class="status" role="status"></p>
+        </form>
+      </details>
+
+      <footer>Nahrané exporty zůstávají pouze v paměti serveru. Ověřte prosím výsledné hodnoty před použitím pro daňové účely.</footer>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
