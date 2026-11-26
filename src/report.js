@@ -183,6 +183,53 @@ function sharesHeldNearDate(source, ticker, timestamp, positionId, maxDays = 45)
   return null;
 }
 
+function isFractionalTrade(row) {
+  const category = String(row.Category || "").toUpperCase();
+  const volume = number(row.Volume);
+  return category.includes("FRACTION")
+    || category.includes("RIGHT")
+    || Math.abs(volume - Math.round(volume)) > 1e-9;
+}
+
+function tradeGroupKey(row) {
+  const account = row.source
+    ? `${row.source.account}|${row.source.accountCurrency}`
+    : "";
+  const ticker = String(row.Ticker || "").toUpperCase()
+    || `POSITION:${String(row["Position ID"] || "")}`;
+  return `${account}|${ticker}`;
+}
+
+function classifyTrades(trades, history) {
+  const fractionalVolumes = new Map();
+  for (const row of history) {
+    const category = String(row.Category || "").toUpperCase();
+    const product = String(row.Product || "").toUpperCase();
+    if (category.includes("CFD") || product.includes("CFD")
+        || String(row.Type || "").toUpperCase() !== "BUY" || !isFractionalTrade(row)) {
+      continue;
+    }
+    const key = tradeGroupKey(row);
+    fractionalVolumes.set(key, (fractionalVolumes.get(key) || 0) + Math.abs(number(row.Volume)));
+  }
+
+  const cfdRows = [];
+  const stockRows = [];
+  const fractionalRows = [];
+  for (const row of trades) {
+    const category = String(row.Category || "").toUpperCase();
+    const product = String(row.Product || "").toUpperCase();
+    if (category.includes("CFD") || product.includes("CFD")) {
+      cfdRows.push(row);
+    } else if (isFractionalTrade(row) && (fractionalVolumes.get(tradeGroupKey(row)) || 0) < 1) {
+      fractionalRows.push(row);
+    } else {
+      stockRows.push(row);
+    }
+  }
+  return { cfdRows, stockRows, fractionalRows };
+}
+
 function deriveDividendAmounts(dividends, taxes, year, rates) {
   for (const row of dividends) {
     const perShare = dividendPerShare(row.Comment);
@@ -463,17 +510,11 @@ async function buildReport({
   const trades = closed.filter((row) => inYear(row["Close Time (UTC)"]));
   const cashRows = cash.filter((row) => inYear(row.Time));
   const openRows = open.filter((row) => dateValue(row["Open time (UTC)"]));
-  const cfdRows = [];
-  const stockRows = [];
-  const fractionalRows = [];
-
-  for (const row of trades) {
-    const category = String(row.Category || "").toUpperCase();
-    const product = String(row.Product || "").toUpperCase();
-    if (category.includes("CFD") || product.includes("CFD")) cfdRows.push(row);
-    else if (category.includes("FRACTION") || category.includes("RIGHT")) fractionalRows.push(row);
-    else stockRows.push(row);
-  }
+  const history = sources.flatMap((source) => [
+    ...source.closed,
+    ...source.open,
+  ].map((row) => ({ ...row, source })));
+  const { cfdRows, stockRows, fractionalRows } = classifyTrades(trades, history);
 
   const decorateTrade = (row) => {
     const accountCurrency = row.source.accountCurrency;
@@ -1295,6 +1336,7 @@ async function buildReport({
 
 module.exports = {
   buildReport,
+  classifyTrades,
   dateKey,
   fxFor,
 };

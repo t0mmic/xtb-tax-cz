@@ -48,6 +48,10 @@ Zdrojové XLSX ani vygenerovaný report se EODHD neposílají.
 - U akcií a frakčních práv se hodnoty v měně instrumentu přepočítají kurzem
   nákupu a prodeje zvlášť; k výsledku se přičte exportovaný poplatek přepočtený
   kurzem účtu.
+- Zlomkové nákupy akcií a ETF se sčítají podle tickeru a účtu v celé dostupné
+  historii, včetně otevřených pozic. Dokud jejich součet nedosáhne jednoho kusu,
+  jsou vedeny jako Frakční práva; po dosažení celého kusu se mezi akcie/ETF
+  přeřadí i dřívější zlomkové transakce daného tickeru a účtu.
 - U CFD se použije exportovaný `Profit/Loss`, který již zahrnuje náklady
   uvedené v XTB exportu. Související řádky `Close trade` a již zahrnuté swapy
   se proto nepřičítají podruhé.
