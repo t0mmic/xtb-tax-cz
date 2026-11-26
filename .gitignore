@@ -1,6 +1,7 @@
 node_modules/
 data/*
 test/
+src/report.test.js
 npm-debug.log*
 !data/cnb-rates.json
 !data/Fiscal Report.xlsx
